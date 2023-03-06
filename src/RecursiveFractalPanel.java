@@ -17,6 +17,8 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     {
         super();
         this.addComponentListener(this);
+        this.addMouseListener(this);
+        this.addMouseMotionListener(this);
         needsRefresh = true;
         shouldInterrupt = false;
         minMathX = -2;
@@ -35,6 +37,16 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
         synchronized (image)
         {
             g.drawImage(image,0,0,null);
+        }
+        if (startCornerX != -1 && startCornerY != -1)
+        {
+            g.setColor(new Color((int)(256*Math.random()),
+                                 (int)(256*Math.random()),
+                                 (int)(256*Math.random())));
+            g.drawRect(Math.min(startCornerX,endCornerX),
+                       Math.min(startCornerY,endCornerY),
+                       Math.abs(endCornerX-startCornerX),
+                       Math.abs(endCornerY-startCornerY));
         }
     }
 
@@ -58,7 +70,11 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     {
         if (count == 0)
             return Color.BLACK;
-        return new Color(count%256, (4*count)%256, 255-count%256);
+        int c1 = 5*count;
+        int c2 = count/8;
+        return new Color((1-(count/256)%2)*(255-count%256)+(count/256)%2*(count%256),
+                         (1-(c1/256)%2)*(c1%256)+(c1/256)%2*(255-c1%256),
+                         (1-(c2/256)%2)*(c2%256)+(c2/256)%2*(255-c1%256));
     }
 
     public int countStepsToExit(Complex c)
@@ -78,7 +94,25 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
         return count2Color(countStepsToExit(new Complex(pixelX2MathX(x),pixelY2MathY(y))));
     }
 
+    public void updateMathBounds()
+    {
+        if (startCornerX!=endCornerX && startCornerY!=endCornerY)
+        {
+            double startMathX = pixelX2MathX(startCornerX);
+            double startMathY = pixelY2MathY(startCornerY);
+            double endMathX = pixelX2MathX(endCornerX);
+            double endMathY = pixelY2MathY(endCornerY);
 
+            minMathX = Math.min(startMathX, endMathX);
+            maxMathX = Math.max(startMathX, endMathX);
+            minMathY = Math.min(startMathY, endMathY);
+            maxMathY = Math.max(startMathY, endMathY);
+
+            shouldInterrupt = true;
+            needsRefresh = true;
+        }
+
+    }
 
     @Override
     public void componentResized(ComponentEvent e)
@@ -117,6 +151,8 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     {
         startCornerX = e.getX();
         startCornerY = e.getY();
+        endCornerX = e.getX();
+        endCornerY = e.getY();
     }
 
     @Override
@@ -172,8 +208,8 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
                 if (needsRefresh && image != null)
                 {
                     needsRefresh = false;
-                    performTraditionalScan();
-
+//                    performTraditionalScan();
+                    performPixelatedScan();
 
                 }
 
@@ -204,6 +240,39 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
                     repaint();
                 }
             needsRefresh = false;
+        }
+
+        public void performPixelatedScan()
+        {
+            int resolution = Math.min(getWidth(), getHeight());
+            int previous_resolution = resolution*2;
+            synchronized (image)
+            {
+                Graphics imgG = image.getGraphics();
+                imgG.setColor(getColorForPixel(0,0));
+                imgG.fillRect(0,0,resolution,resolution);
+            }
+            while (resolution > 0)
+            {
+                for (int y=0; y<getHeight(); y+= resolution)
+                    for (int x=0; x<getWidth(); x+= resolution)
+                    {
+                        if (shouldInterrupt)
+                            return;
+                        if (x%(previous_resolution)==0 && y%(previous_resolution)==0)
+                            continue;
+                        synchronized (image)
+                        {
+                            Graphics imgG = image.getGraphics();
+                            imgG.setColor(getColorForPixel(x, y));
+                            imgG.fillRect(x,y,resolution,resolution);
+                        }
+                        repaint();
+                    }
+                previous_resolution = resolution;
+                resolution /=2;
+
+            }
         }
     }
 
