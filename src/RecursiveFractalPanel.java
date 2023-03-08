@@ -278,9 +278,9 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
                 if (needsRefresh && image != null)
                 {
                     needsRefresh = false;
-//                    performTraditionalScan();
+                    performTraditionalScan();
 //                    performPixelatedScan();
-                    performDivideAndConquerScan();
+//                    performDivideAndConquerScan(); // you'll be writing this one.
                 }
                 // if we don't need to refresh, wait 1/2 a second and check again.
                 try
