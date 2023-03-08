@@ -13,10 +13,12 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     private final int max_count = 1024;
     private int startCornerX, startCornerY, endCornerX, endCornerY;
     private Stack<ComplexRange> undoStack, redoStack;
+    private RecursiveFractalFrame parent;
 
-    public RecursiveFractalPanel()
+    public RecursiveFractalPanel(RecursiveFractalFrame parent)
     {
         super();
+        this.parent = parent;
         undoStack = new Stack<ComplexRange>();
         redoStack = new Stack<ComplexRange>();
         this.addComponentListener(this);
@@ -132,9 +134,13 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
 
     public void performReset()
     {
+        if (minMathX == -2 && minMathY == -2 && maxMathX == 2 && maxMathY == 2)
+            return;
         undoStack.push(new ComplexRange(new Complex(minMathX, minMathY), new Complex(maxMathX, maxMathY)));
+        parent.setUndoMenuEnabled(true);
         setMathBounds(new Complex(-2,-2), new Complex(+2, +2));
         redoStack.clear();
+        parent.setRedoMenuEnabled(false);
     }
 
     public void setMathBounds(Complex cMin, Complex cMax)
@@ -151,30 +157,32 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
      * reverts to last recorded ComplexRange, if any, and (if so) adds the current (pre-change) range to redoStack.
      * @return whether there are any undo items remaining.
      */
-    public boolean performUndo()
+    public void performUndo()
     {
         if (undoStack.empty())
-            return false;
+            return;
         ComplexRange presentRange = new ComplexRange(new Complex(minMathX,minMathY), new Complex(maxMathX, maxMathY));
         redoStack.push(presentRange);
+        parent.setRedoMenuEnabled(true);
         ComplexRange lastRange = undoStack.pop();
         setMathBounds(lastRange.getMin(), lastRange.getMax());
-        return true;
+        parent.setUndoMenuEnabled(!undoStack.empty());
     }
 
     /**
      * reverts to last "undone" ComplexRange, if any, and (if so) adds the current (pre-change) range back to undoStack.
      * @return whether there are any redo items remaining.
      */
-    public boolean performRedo()
+    public void performRedo()
     {
         if (redoStack.empty())
-            return false;
+            return;
         ComplexRange presentRange = new ComplexRange(new Complex(minMathX,minMathY), new Complex(maxMathX, maxMathY));
         undoStack.push(presentRange);
+        parent.setUndoMenuEnabled(true);
         ComplexRange lastRange = redoStack.pop();
         setMathBounds(lastRange.getMin(), lastRange.getMax());
-
+        parent.setRedoMenuEnabled(!redoStack.empty());
     }
 
     /**
@@ -189,6 +197,7 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
         if (startCornerX!=endCornerX && startCornerY!=endCornerY)
         {
             undoStack.push(new ComplexRange(new Complex(minMathX, minMathY), new Complex(maxMathX, maxMathY)));
+            parent.setUndoMenuEnabled(true);
             double startMathX = pixelX2MathX(startCornerX);
             double startMathY = pixelY2MathY(startCornerY);
             double endMathX = pixelX2MathX(endCornerX);
@@ -204,6 +213,7 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
             shouldInterrupt = true;
             needsRefresh = true;
             redoStack.clear();
+            parent.setRedoMenuEnabled(false);
         }
     }
 

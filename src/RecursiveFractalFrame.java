@@ -13,8 +13,9 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
     {
         super("Mandelbrot");
         getContentPane().setLayout(new GridLayout(1,1));
-        mainPanel = new RecursiveFractalPanel();
         createMenu();
+        mainPanel = new RecursiveFractalPanel(this);
+        undoMI.setEnabled(false);
         getContentPane().add(mainPanel);
         setSize(800,800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -43,16 +44,21 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
         undoMI = new JMenuItem("Undo");
         undoMI.addActionListener(this);
         undoMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, ActionEvent.META_MASK));
+        undoMI.setEnabled(false);
         navigateMenu.add(undoMI);
 
         redoMI = new JMenuItem("Redo");
         redoMI.addActionListener(this);
         redoMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, ActionEvent.META_MASK+ActionEvent.SHIFT_MASK));
+        redoMI.setEnabled(false);
         navigateMenu.add(redoMI);
 
         this.setJMenuBar(mainMenu);
 
     }
+
+    public void setUndoMenuEnabled(boolean enable) {undoMI.setEnabled(enable);}
+    public void setRedoMenuEnabled(boolean enable) {redoMI.setEnabled(enable);}
 
     public void doExportImage()
     {
@@ -69,12 +75,14 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
     {
         System.out.println("Doing undo.");
         mainPanel.performUndo();
+
     }
 
     public void doRedo()
     {
         System.out.println("Doing redo.");
         mainPanel.performRedo();
+
     }
     @Override
     public void actionPerformed(ActionEvent e)
