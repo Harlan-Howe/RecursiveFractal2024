@@ -9,6 +9,16 @@ public class Complex
         imaginary = img;
     }
 
+    public double getReal()
+    {
+        return real;
+    }
+
+    public double getImaginary()
+    {
+        return imaginary;
+    }
+
     public String toString()
     {
         if (imaginary >= 0)
