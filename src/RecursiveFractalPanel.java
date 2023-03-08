@@ -203,15 +203,10 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
         {
             undoStack.push(new ComplexRange(new Complex(minMathX, minMathY), new Complex(maxMathX, maxMathY)));
             parent.setUndoMenuEnabled(true);
-            double startMathX = pixelX2MathX(startCornerX);
-            double startMathY = pixelY2MathY(startCornerY);
-            double endMathX = pixelX2MathX(endCornerX);
-            double endMathY = pixelY2MathY(endCornerY);
 
-            minMathX = Math.min(startMathX, endMathX);
-            maxMathX = Math.max(startMathX, endMathX);
-            minMathY = Math.min(startMathY, endMathY);
-            maxMathY = Math.max(startMathY, endMathY);
+            Complex c1 = new Complex(pixelX2MathX(startCornerX),pixelY2MathY(startCornerY));
+            Complex c2 = new Complex(pixelX2MathX(endCornerX),pixelY2MathY(endCornerY));
+            setMathBounds(c1,c2);
 
             // since we've changed the bounds, we need to stop the scan in progress (if any) and
             // start over.
