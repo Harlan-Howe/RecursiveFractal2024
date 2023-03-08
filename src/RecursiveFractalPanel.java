@@ -19,6 +19,11 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     private Stack<ComplexRange> undoStack, redoStack;
     private RecursiveFractalFrame parent;
     private File lastFile = null;
+    private int scanMode;
+
+    public static final int MODE_TRADITIONAL = 0;
+    public static final int MODE_BLOCKY = 1;
+    public static final int MODE_DIVIDE_AND_CONQUER = 2;
 
     public RecursiveFractalPanel(RecursiveFractalFrame parent)
     {
@@ -34,7 +39,7 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
         performReset();
         startCornerX = -1;
         startCornerY = -1;
-
+        scanMode = MODE_TRADITIONAL;
     }
 
     public void paintComponent(Graphics g)
@@ -55,6 +60,13 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
                        Math.abs(endCornerX-startCornerX),
                        Math.abs(endCornerY-startCornerY));
         }
+    }
+
+    public void setScanMode(int scanMode)
+    {
+        this.scanMode = scanMode;
+        shouldInterrupt = true;
+        needsRefresh = true;
     }
 
     /**
@@ -392,9 +404,18 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
                 if (needsRefresh && image != null)
                 {
                     needsRefresh = false;
-//                    performTraditionalScan();
-                    performPixelatedScan();
-//                    performDivideAndConquerScan(); // you'll be writing this one.
+                    switch (scanMode)
+                    {
+                        case MODE_TRADITIONAL:
+                            performTraditionalScan();
+                            break;
+                        case MODE_BLOCKY:
+                            performPixelatedScan();
+                            break;
+                        case MODE_DIVIDE_AND_CONQUER:
+                        default:
+                            performDivideAndConquerScan(); // you'll be writing this one.
+                    }
                 }
                 // if we don't need to refresh, wait 1/2 a second and check again.
                 try

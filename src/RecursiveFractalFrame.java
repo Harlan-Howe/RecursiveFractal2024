@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.plaf.metal.MetalCheckBoxIcon;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,7 +9,8 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
 {
     private RecursiveFractalPanel mainPanel;
     private JMenuItem exportImageMI, resetMI, undoMI, redoMI;
-
+    private JMenuItem traditionalSM, blockySM, divideAndConquerSM;
+    private String[] scanTypeNames = {"Traditional", "Blocky", "Divide and Conquer"};
     public RecursiveFractalFrame()
     {
         super("Mandelbrot");
@@ -28,8 +30,10 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
         JMenuBar mainMenu = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
         JMenu navigateMenu = new JMenu("Navigate");
+        JMenu scanMenu = new JMenu("Scan");
         mainMenu.add(fileMenu);
         mainMenu.add(navigateMenu);
+        mainMenu.add(scanMenu);
 
         exportImageMI = new JMenuItem("Export Image");
         exportImageMI.addActionListener(this);
@@ -52,6 +56,25 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
         redoMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, ActionEvent.META_MASK+ActionEvent.SHIFT_MASK));
         redoMI.setEnabled(false);
         navigateMenu.add(redoMI);
+
+        traditionalSM = new JCheckBoxMenuItem(scanTypeNames[0]);
+        traditionalSM.setSelected(true);
+        traditionalSM.addActionListener(this);
+        traditionalSM.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1, ActionEvent.META_MASK));
+        scanMenu.add(traditionalSM);
+
+        blockySM = new JCheckBoxMenuItem(scanTypeNames[1]);
+        blockySM.setSelected(false);
+        blockySM.addActionListener(this);
+        blockySM.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, ActionEvent.META_MASK));
+        scanMenu.add(blockySM);
+
+        divideAndConquerSM = new JCheckBoxMenuItem(scanTypeNames[2]);
+        divideAndConquerSM.setSelected(false);
+        divideAndConquerSM.addActionListener(this);
+        divideAndConquerSM.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_3, ActionEvent.META_MASK));
+        scanMenu.add(divideAndConquerSM);
+
 
         this.setJMenuBar(mainMenu);
 
@@ -96,5 +119,28 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
             doUndo();
         if (e.getSource() == redoMI)
             doRedo();
+        if (e.getSource() == traditionalSM)
+        {
+            traditionalSM.setSelected(true);
+            blockySM.setSelected(false);
+            divideAndConquerSM.setSelected(false);
+            mainPanel.setScanMode(RecursiveFractalPanel.MODE_TRADITIONAL);
+        }
+        if (e.getSource() == blockySM)
+        {
+            traditionalSM.setSelected(false);
+            blockySM.setSelected(true);
+            divideAndConquerSM.setSelected(false);
+            mainPanel.setScanMode(RecursiveFractalPanel.MODE_BLOCKY);
+        }
+        if (e.getSource() == divideAndConquerSM)
+        {
+            traditionalSM.setSelected(false);
+            blockySM.setSelected(false);
+            divideAndConquerSM.setSelected(true);
+            mainPanel.setScanMode(RecursiveFractalPanel.MODE_DIVIDE_AND_CONQUER);
+        }
+
+
     }
 }
