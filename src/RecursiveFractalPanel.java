@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.util.Stack;
 
 public class RecursiveFractalPanel extends JPanel implements ComponentListener, MouseListener, MouseMotionListener
 {
@@ -11,24 +12,22 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     private final double threshold_squared = 10;
     private final int max_count = 1024;
     private int startCornerX, startCornerY, endCornerX, endCornerY;
-
+    private Stack<ComplexRange> undoStack, redoStack;
 
     public RecursiveFractalPanel()
     {
         super();
+        undoStack = new Stack<ComplexRange>();
+        redoStack = new Stack<ComplexRange>();
         this.addComponentListener(this);
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
-        needsRefresh = true;
-        shouldInterrupt = false;
-        minMathX = -2;
-        minMathY = -2;
-        maxMathX = +2;
-        maxMathY = +2;
         MandelbrotThread mt = new MandelbrotThread();
         mt.start();
+        performReset();
         startCornerX = -1;
         startCornerY = -1;
+
     }
 
     public void paintComponent(Graphics g)
@@ -131,6 +130,53 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
         return count2Color(countStepsToExit(new Complex(pixelX2MathX(x),pixelY2MathY(y))));
     }
 
+    public void performReset()
+    {
+        undoStack.push(new ComplexRange(new Complex(minMathX, minMathY), new Complex(maxMathX, maxMathY)));
+        setMathBounds(new Complex(-2,-2), new Complex(+2, +2));
+        redoStack.clear();
+    }
+
+    public void setMathBounds(Complex cMin, Complex cMax)
+    {
+        shouldInterrupt=true;
+        minMathX = Math.min(cMin.getReal(),cMax.getReal());
+        minMathY = Math.min(cMin.getImaginary(), cMax.getImaginary());
+        maxMathX = Math.max(cMin.getReal(),cMax.getReal());
+        maxMathY = Math.max(cMin.getImaginary(), cMax.getImaginary());
+        needsRefresh = true;
+    }
+
+    /**
+     * reverts to last recorded ComplexRange, if any, and (if so) adds the current (pre-change) range to redoStack.
+     * @return whether there are any undo items remaining.
+     */
+    public boolean performUndo()
+    {
+        if (undoStack.empty())
+            return false;
+        ComplexRange presentRange = new ComplexRange(new Complex(minMathX,minMathY), new Complex(maxMathX, maxMathY));
+        redoStack.push(presentRange);
+        ComplexRange lastRange = undoStack.pop();
+        setMathBounds(lastRange.getMin(), lastRange.getMax());
+        return true;
+    }
+
+    /**
+     * reverts to last "undone" ComplexRange, if any, and (if so) adds the current (pre-change) range back to undoStack.
+     * @return whether there are any redo items remaining.
+     */
+    public boolean performRedo()
+    {
+        if (redoStack.empty())
+            return false;
+        ComplexRange presentRange = new ComplexRange(new Complex(minMathX,minMathY), new Complex(maxMathX, maxMathY));
+        undoStack.push(presentRange);
+        ComplexRange lastRange = redoStack.pop();
+        setMathBounds(lastRange.getMin(), lastRange.getMax());
+
+    }
+
     /**
      * The user has asked us to zoom in, giving a start and end pixels that correspond to opposite
      * corners of a rectangle. We need to update the startMathX, startMathY, endMathX, endMathY to
@@ -138,10 +184,11 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
      * (Note the given points may not represent the (left, top) and (right, bottom) corners, so we
      * need to compensate for this.)
      */
-    public void updateMathBounds()
+    public void updateMathBoundsFromMouseDrag()
     {
         if (startCornerX!=endCornerX && startCornerY!=endCornerY)
         {
+            undoStack.push(new ComplexRange(new Complex(minMathX, minMathY), new Complex(maxMathX, maxMathY)));
             double startMathX = pixelX2MathX(startCornerX);
             double startMathY = pixelY2MathY(startCornerY);
             double endMathX = pixelX2MathX(endCornerX);
@@ -156,9 +203,11 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
             // start over.
             shouldInterrupt = true;
             needsRefresh = true;
+            redoStack.clear();
         }
-
     }
+
+
 
     @Override
     /**
@@ -217,7 +266,7 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
         // the user just released the mouse button. So we want to initiate the zoom process.
         endCornerX = e.getX();
         endCornerY = e.getY();
-        updateMathBounds();
+        updateMathBoundsFromMouseDrag();
         repaint();
         startCornerX = -1;
         startCornerY = -1;
@@ -278,8 +327,8 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
                 if (needsRefresh && image != null)
                 {
                     needsRefresh = false;
-                    performTraditionalScan();
-//                    performPixelatedScan();
+//                    performTraditionalScan();
+                    performPixelatedScan();
 //                    performDivideAndConquerScan(); // you'll be writing this one.
                 }
                 // if we don't need to refresh, wait 1/2 a second and check again.
