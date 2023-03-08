@@ -63,6 +63,7 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
     public void doExportImage()
     {
         System.out.println("Doing Export.");
+        mainPanel.doSaveScreen();
     }
 
     public void doResetBounds()

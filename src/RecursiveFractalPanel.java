@@ -1,7 +1,11 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Stack;
 
 public class RecursiveFractalPanel extends JPanel implements ComponentListener, MouseListener, MouseMotionListener
@@ -14,6 +18,7 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     private int startCornerX, startCornerY, endCornerX, endCornerY;
     private Stack<ComplexRange> undoStack, redoStack;
     private RecursiveFractalFrame parent;
+    private File lastFile = null;
 
     public RecursiveFractalPanel(RecursiveFractalFrame parent)
     {
@@ -217,7 +222,62 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
         }
     }
 
+    /**
+     * give the user the option to select a location to save an
+     * image file that matches the current display.
+     */
+    public void doSaveScreen()
+    {
+        JFileChooser chooser = new JFileChooser();
+        if (lastFile != null)
+            chooser.setSelectedFile(lastFile);
+        chooser.setDialogTitle("Export");
+        String[] extensions = {"jpg","gif","png"};
+        chooser.setFileFilter(new FileNameExtensionFilter("images",extensions));
 
+        int result = chooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION)
+        {
+            lastFile = chooser.getSelectedFile();
+            String filename = lastFile.getPath();
+            BufferedImage exportImage = new BufferedImage(getWidth(),getHeight(),BufferedImage.TYPE_INT_ARGB);
+            Graphics2D gExport = exportImage.createGraphics();
+            // tell it to draw things well, or you get mushy fonts and square dots.
+            gExport.setRenderingHint(
+                    RenderingHints.KEY_TEXT_ANTIALIASING,
+                    RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            gExport.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+            paintComponent(gExport);
+            gExport.dispose();
+            int i = filename.lastIndexOf('.');
+            if (i<=0)
+            {
+                try
+                {
+                    ImageIO.write(exportImage, "png", new File(filename + ".png"));
+                }catch(IOException ioExp)
+                {
+                    System.out.println("Problem writing file.");
+                    ioExp.printStackTrace();
+                }
+            }
+            else
+            {
+                String extension = filename.substring(i+1);
+                try
+                {
+                    ImageIO.write(exportImage, extension, new File(filename));
+                }catch(IOException ioExp)
+                {
+                    System.out.println("Problem writing file.");
+                    ioExp.printStackTrace();
+                }
+            }
+
+        }
+    }
 
     @Override
     /**
