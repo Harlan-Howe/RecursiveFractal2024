@@ -13,8 +13,8 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     private BufferedImage image;
     private boolean needsRefresh, shouldInterrupt;
     private double minMathX, minMathY, maxMathX, maxMathY;
-    private final double threshold_squared = 10;
-    private final int max_count = 1024;
+    private final double thresholdSquared = 10;
+    private final int maxCount = 1024;
     private int startCornerX, startCornerY, endCornerX, endCornerY;
     private Stack<ComplexRange> undoStack, redoStack;
     private RecursiveFractalFrame parent;
@@ -22,7 +22,7 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     private int scanMode;
 
     public static final int MODE_TRADITIONAL = 0;
-    public static final int MODE_BLOCKY = 1;
+    public static final int MODE_PIXELATED = 1;
     public static final int MODE_DIVIDE_AND_CONQUER = 2;
 
     public RecursiveFractalPanel(RecursiveFractalFrame parent)
@@ -65,8 +65,10 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     public void setScanMode(int scanMode)
     {
         this.scanMode = scanMode;
+        image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
         shouldInterrupt = true;
         needsRefresh = true;
+        repaint();
     }
 
     /**
@@ -128,10 +130,10 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
     public int countStepsToExit(Complex c)
     {
         Complex z = Complex.zero();
-        for (int count = 0; count < max_count; count++)
+        for (int count = 0; count < maxCount; count++)
         {
             z = z.squared().plus(c);
-            if (z.magnitude_squared()>threshold_squared)
+            if (z.magnitude_squared()> thresholdSquared)
                 return count;
         }
         return 0;
@@ -409,7 +411,7 @@ public class RecursiveFractalPanel extends JPanel implements ComponentListener, 
                         case MODE_TRADITIONAL:
                             performTraditionalScan();
                             break;
-                        case MODE_BLOCKY:
+                        case MODE_PIXELATED:
                             performPixelatedScan();
                             break;
                         case MODE_DIVIDE_AND_CONQUER:
