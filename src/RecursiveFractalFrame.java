@@ -1,5 +1,4 @@
 import javax.swing.*;
-import javax.swing.plaf.metal.MetalCheckBoxIcon;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,8 +8,8 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
 {
     private RecursiveFractalPanel mainPanel;
     private JMenuItem exportImageMI, resetMI, undoMI, redoMI;
-    private JMenuItem traditionalSM, blockySM, divideAndConquerSM;
-    private String[] scanTypeNames = {"Traditional", "Blocky", "Divide and Conquer"};
+    private JMenuItem traditionalSM, pixelatedSM, divideAndConquerSM;
+    private String[] scanTypeNames = {"Traditional", "Pixelated", "Divide and Conquer"};
     public RecursiveFractalFrame()
     {
         super("Mandelbrot");
@@ -63,11 +62,11 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
         traditionalSM.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1, ActionEvent.META_MASK));
         scanMenu.add(traditionalSM);
 
-        blockySM = new JCheckBoxMenuItem(scanTypeNames[1]);
-        blockySM.setSelected(false);
-        blockySM.addActionListener(this);
-        blockySM.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, ActionEvent.META_MASK));
-        scanMenu.add(blockySM);
+        pixelatedSM = new JCheckBoxMenuItem(scanTypeNames[1]);
+        pixelatedSM.setSelected(false);
+        pixelatedSM.addActionListener(this);
+        pixelatedSM.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, ActionEvent.META_MASK));
+        scanMenu.add(pixelatedSM);
 
         divideAndConquerSM = new JCheckBoxMenuItem(scanTypeNames[2]);
         divideAndConquerSM.setSelected(false);
@@ -122,21 +121,21 @@ public class RecursiveFractalFrame extends JFrame implements ActionListener
         if (e.getSource() == traditionalSM)
         {
             traditionalSM.setSelected(true);
-            blockySM.setSelected(false);
+            pixelatedSM.setSelected(false);
             divideAndConquerSM.setSelected(false);
             mainPanel.setScanMode(RecursiveFractalPanel.MODE_TRADITIONAL);
         }
-        if (e.getSource() == blockySM)
+        if (e.getSource() == pixelatedSM)
         {
             traditionalSM.setSelected(false);
-            blockySM.setSelected(true);
+            pixelatedSM.setSelected(true);
             divideAndConquerSM.setSelected(false);
-            mainPanel.setScanMode(RecursiveFractalPanel.MODE_BLOCKY);
+            mainPanel.setScanMode(RecursiveFractalPanel.MODE_PIXELATED);
         }
         if (e.getSource() == divideAndConquerSM)
         {
             traditionalSM.setSelected(false);
-            blockySM.setSelected(false);
+            pixelatedSM.setSelected(false);
             divideAndConquerSM.setSelected(true);
             mainPanel.setScanMode(RecursiveFractalPanel.MODE_DIVIDE_AND_CONQUER);
         }
